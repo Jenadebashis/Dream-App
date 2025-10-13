@@ -24,6 +24,7 @@ export default function QuizPlayer({
   const [running, setRunning] = useState(false);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState(null);
+  const [revealed, setRevealed] = useState(false);
   const [recordedUrl, setRecordedUrl] = useState(null);
   const [completed, setCompleted] = useState(false);
 
@@ -201,17 +202,21 @@ export default function QuizPlayer({
   };
 
   const revealResult = (sel) => {
+    // mark selection (may be null) and reveal answers
     setSelected(sel);
+    setRevealed(true);
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
 
+    // keep revealed message (and shake) visible for 2000ms, then proceed
     setTimeout(() => {
       const nextIndex = index + 1;
       if (nextIndex < quiz.questions.length) {
         setIndex(nextIndex);
         setSelected(null);
+        setRevealed(false);
         // background change -> showContent true after delay -> effect starts timer
       } else {
         if (timerRef.current) {
@@ -222,7 +227,7 @@ export default function QuizPlayer({
         setRunning(false);
         setCompleted(true);
       }
-    }, 1200);
+    }, 2000);
   };
 
   const onSelect = (n) => {
@@ -232,10 +237,10 @@ export default function QuizPlayer({
 
   const q = quiz.questions[index] || { id: `q-${index}`, questionText: '', options: [], correctAnswer: 1 };
   const options = Array.isArray(q.options) ? q.options : [];
-
+  const correctIndex = q.correctAnswer ?? 1;
   // true when none of the options include an image -> use 2x2 text layout
   const allTextOnly = options.length > 0 && options.every((o) => !o.image);
-  
+
   console.log('current question', index, q);
   console.log('options length', options.length, options);
 
@@ -257,30 +262,39 @@ export default function QuizPlayer({
               className={`options-display ${allTextOnly ? 'text-grid' : ''}`}
               style={{ zIndex: 11 }}
             >
-              {options.map((opt, i) => (
-                <div
-                  key={`${q.id ?? index}-${i}`}
-                  className={`option-card ${selected !== null
-                      ? (i + 1) === (q.correctAnswer ?? 1)
-                        ? 'correct'
-                        : (i + 1) === selected
-                          ? 'incorrect'
-                          : ''
-                      : ''
-                    }`}
-                  onClick={() => onSelect(i + 1)}
-                  style={{ animationDelay: `${i * 260}ms` }} // increased stagger for slower feel
-                >
-                  <div className="option-badge">{String.fromCharCode(65 + i)}</div>
-                  <div className="option-content">
-                    {opt.text && <div className="option-text">{opt.text}</div>}
-                    {opt.image && <img src={opt.image} alt={`opt-${i}`} />}
-                    {/* optional subtext (uncomment/use if you have metadata) */}
-                    {/* opt.sub && <div className="option-subtext">{opt.sub}</div> */}
+              {options.map((opt, i) => {
+                const optNum = i + 1;
+                let optClass = '';
+                // reveal logic: when revealed, always mark correct; if user selected something, mark incorrect for that selection
+                if (revealed) {
+                  if (optNum === correctIndex) optClass = 'correct shake';
+                  else if (selected !== null && optNum === selected) optClass = 'incorrect';
+                } else if (selected !== null) {
+                  if (optNum === correctIndex) optClass = 'correct';
+                  else if (optNum === selected) optClass = 'incorrect';
+                }
+                return (
+                  <div
+                    key={`${q.id ?? index}-${i}`}
+                    className={`option-card ${optClass}`}
+                    onClick={() => onSelect(i + 1)}
+                    style={{ animationDelay: `${i * 260}ms` }} // increased stagger for slower feel
+                  >
+                    <div className="option-badge">{String.fromCharCode(65 + i)}</div>
+                    <div className="option-content">
+                      {opt.text && <div className="option-text">{opt.text}</div>}
+                      {opt.image && <img src={opt.image} alt={`opt-${i}`} />}
+                      {/* optional subtext (uncomment/use if you have metadata) */}
+                      {/* opt.sub && <div className="option-subtext">{opt.sub}</div> */}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
+            {/* reveal message when time expires with no selection */}
+            {revealed && selected === null && (
+              <div className="reveal-text">Time's up ⏰🕰️⌚ — Correct: Option {String.fromCharCode(64 + correctIndex)}</div>
+            )}
           </>
         ) : (
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '40px 0', color: '#ddd' }}>
@@ -288,7 +302,7 @@ export default function QuizPlayer({
           </div>
         )}
 
-        <div id="timerSection" className="timer-section" style={{ display: (running && showContent) ? 'block' : 'none' }}>
+        <div id="timerSection" className="timer-section" style={{ display: (running && showContent && !revealed) ? 'block' : 'none' }}>
           <div className="timer-bar" aria-hidden="true">
             <div className={`timer-fill ${timerColorClass}`} style={{ width: `${progressPercent}%` }} />
           </div>

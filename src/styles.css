@@ -861,3 +861,124 @@ body {
         padding-left: 60px;
     }
 }
+
+/* message shown when answers are revealed but no option was picked */
+.reveal-text {
+    margin-top: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+    /* vivid green */
+    color: #fff;
+    /* white text for max contrast */
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 15px;
+    box-shadow: 0 10px 30px rgba(5, 150, 105, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    line-height: 1;
+}
+
+/* icon on the left to make the reveal message obvious */
+.reveal-text::before {
+    content: "✔";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.10);
+    color: #fff;
+    font-weight: 900;
+    font-size: 14px;
+    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.12);
+}
+
+/* keep correct-card visuals prominent but DO NOT change option text styling */
+.option-card.correct {
+    border-image: linear-gradient(90deg, rgba(41, 181, 115, 0.95), rgba(96, 165, 250, 0.12)) 1;
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.06), rgba(16, 185, 129, 0.02));
+    box-shadow: 0 18px 44px rgba(16, 185, 129, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    transform: translateY(-4px) scale(1.01);
+    transition: transform 220ms cubic-bezier(.2, .9, .2, 1), box-shadow 220ms, border-color 220ms;
+}
+
+/* keep checkmark badge for the correct option */
+.option-card.correct::before {
+    content: "✔";
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(34, 197, 94, 0.95);
+    color: white;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-weight: 700;
+    box-shadow: 0 8px 22px rgba(16, 185, 129, 0.14);
+    z-index: 4;
+    pointer-events: none;
+    font-size: 14px;
+}
+
+/* ensure option text stays as the normal readable style (no extra emphasis for correct) */
+.option-card.correct .option-text {
+    color: #fff;
+    /* match base option text color */
+    font-size: 18px;
+    /* same as .option-text */
+    font-weight: 700;
+    /* same weight as .option-text */
+    text-shadow: none;
+    /* remove extra shadow so text doesn't pop more than the card */
+}
+
+/* subtle de-emphasis for incorrect (so correct stands out) */
+.option-card.incorrect {
+    opacity: 0.88;
+    filter: saturate(0.85);
+}
+
+/* one-shot shake for correct option when revealed */
+@keyframes correctShake {
+    0% {
+        transform: translateX(0);
+    }
+
+    15% {
+        transform: translateX(-8px);
+    }
+
+    30% {
+        transform: translateX(8px);
+    }
+
+    45% {
+        transform: translateX(-6px);
+    }
+
+    60% {
+        transform: translateX(6px);
+    }
+
+    75% {
+        transform: translateX(-3px);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.option-card.shake {
+    animation: correctShake 700ms cubic-bezier(.36, .07, .19, .97) both;
+    /* ensure the card's transform origin and compositing are GPU friendly */
+    will-change: transform;
+}
