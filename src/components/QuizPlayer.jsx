@@ -230,6 +230,9 @@ export default function QuizPlayer({
   const q = quiz.questions[index] || { id: `q-${index}`, questionText: '', options: [], correctAnswer: 1 };
   const options = Array.isArray(q.options) ? q.options : [];
 
+  // true when none of the options include an image -> use 2x2 text layout
+  const allTextOnly = options.length > 0 && options.every((o) => !o.image);
+  
   console.log('current question', index, q);
   console.log('options length', options.length, options);
 
@@ -242,7 +245,11 @@ export default function QuizPlayer({
               <h2 className="question-text-animated">{q.questionText}</h2>
             </div>
 
-            <div id="optionsDisplay" className="options-display" style={{ zIndex: 11 }}>
+            <div
+              id="optionsDisplay"
+              className={`options-display ${allTextOnly ? 'text-grid' : ''}`}
+              style={{ zIndex: 11 }}
+            >
               {options.map((opt, i) => (
                 <div
                   key={`${q.id ?? index}-${i}`}

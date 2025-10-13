@@ -10,7 +10,8 @@ body {
     min-height: 100vh;
     color: white;
     /* Changed to white for contrast over video */
-    background: #000; /* ensure black background to avoid white flash */
+    background: #000;
+    /* ensure black background to avoid white flash */
 }
 
 /* Background Video */
@@ -22,8 +23,10 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: -1;
-    background: #000; /* fallback while loading */
-    transition: opacity 360ms ease; /* smooth crossfade */
+    background: #000;
+    /* fallback while loading */
+    transition: opacity 360ms ease;
+    /* smooth crossfade */
     opacity: 1;
 }
 
@@ -314,7 +317,7 @@ body {
 
 .option-card {
     position: relative;
-    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.02));
     border-radius: 12px;
     padding: 12px 14px;
     cursor: pointer;
@@ -325,9 +328,9 @@ body {
     /* replace plain border with a subtle gradient border */
     border: 1px solid transparent;
     border-image: linear-gradient(90deg, #60A5FA, #6EE7B7, #E879F9) 1;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.02);
-    transition: transform 260ms cubic-bezier(.2,.9,.2,1), box-shadow 260ms, filter 260ms;
-    animation: optionSlideUp 800ms cubic-bezier(.2,.9,.2,1) both;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    transition: transform 260ms cubic-bezier(.2, .9, .2, 1), box-shadow 260ms, filter 260ms;
+    animation: optionSlideUp 800ms cubic-bezier(.2, .9, .2, 1) both;
     will-change: transform, opacity;
     backface-visibility: hidden;
     transform: translateZ(0);
@@ -335,7 +338,7 @@ body {
 }
 
 /* keep card content above decorative pseudo elements */
-.option-card > * {
+.option-card>* {
     position: relative;
     z-index: 2;
 }
@@ -361,7 +364,7 @@ body {
     position: absolute;
     inset: -6px;
     border-radius: 14px;
-    background: linear-gradient(90deg, rgba(96,165,250,0.10), rgba(110,231,183,0.10), rgba(232,121,249,0.10));
+    background: linear-gradient(90deg, rgba(96, 165, 250, 0.10), rgba(110, 231, 183, 0.10), rgba(232, 121, 249, 0.10));
     filter: blur(12px);
     opacity: 0;
     transition: opacity 260ms ease;
@@ -369,7 +372,7 @@ body {
     pointer-events: none;
 }
 
-.option-card:hover::after{
+.option-card:hover::after {
     opacity: 1;
 }
 
@@ -377,24 +380,24 @@ body {
 .option-card:hover,
 .option-card:focus {
     transform: translateY(-8px) scale(1.01);
-    box-shadow: 0 14px 34px rgba(0,0,0,0.5);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
     border-image: linear-gradient(90deg, #7DD3FC, #86EFAC, #F0ABFC) 1;
 }
 
 /* ensure correct/incorrect states still read well with new border */
 .option-card.correct {
-    border-image: linear-gradient(90deg, rgba(41,181,115,0.9), rgba(96,165,250,0.12)) 1;
+    border-image: linear-gradient(90deg, rgba(41, 181, 115, 0.9), rgba(96, 165, 250, 0.12)) 1;
 }
 
 .option-card.incorrect {
-    border-image: linear-gradient(90deg, rgba(229,83,83,0.95), rgba(232,121,249,0.06)) 1;
+    border-image: linear-gradient(90deg, rgba(229, 83, 83, 0.95), rgba(232, 121, 249, 0.06)) 1;
 }
 
 /* Question text: slower, smoother entrance */
 .question-text-animated {
     /* ...existing code... */
     /* slower duration so it's more noticeable */
-    animation: fadeUpIn 1600ms cubic-bezier(.2,.9,.2,1) both;
+    animation: fadeUpIn 1600ms cubic-bezier(.2, .9, .2, 1) both;
     will-change: transform, opacity;
     /* ensure final state is kept */
     animation-fill-mode: both;
@@ -403,7 +406,7 @@ body {
 /* Option card: slower and more pronounced */
 .option-card {
     /* ...existing code... */
-    animation: optionSlideUp 1200ms cubic-bezier(.2,.9,.2,1) both;
+    animation: optionSlideUp 1200ms cubic-bezier(.2, .9, .2, 1) both;
     will-change: transform, opacity;
     animation-fill-mode: both;
     /* keep a subtle transform hint to reduce jank */
@@ -413,15 +416,37 @@ body {
 
 /* tweak keyframes if needed (example) */
 @keyframes optionSlideUp {
-    0% { opacity: 0; transform: translateY(20px) scale(0.995); }
-    60% { opacity: 1; transform: translateY(-6px) scale(1.005); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.995);
+    }
+
+    60% {
+        opacity: 1;
+        transform: translateY(-6px) scale(1.005);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 @keyframes fadeUpIn {
-    0% { opacity: 0; transform: translateY(18px); }
-    60% { opacity: 1; transform: translateY(-6px); }
-    100% { opacity: 1; transform: translateY(0); }
+    0% {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+
+    60% {
+        opacity: 1;
+        transform: translateY(-6px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* make option content readable */
@@ -727,36 +752,70 @@ body {
     position: absolute;
     left: 14px;
     top: 50%;
-    transform: translateY(-50%); /* center vertically */
+    transform: translateY(-50%);
+    /* center vertically */
     width: 40px;
     height: 40px;
     border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
     color: #fff;
     font-weight: 700;
     font-size: 14px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
     z-index: 3;
-    border: 1px solid rgba(255,255,255,0.04);
+    border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 /* shift content to make room for the centered badge */
-.option-card > .option-content {
-    margin-left: 64px; /* leave space for badge + gap */
+.option-card>.option-content {
+    margin-left: 64px;
+    /* leave space for badge + gap */
     width: calc(100% - 64px);
     display: flex;
     flex-direction: column;
-    justify-content: center; /* center vertically like badge */
-    min-height: 72px; /* keep same min height as card */
+    justify-content: center;
+    /* center vertically like badge */
+    min-height: 72px;
+    /* keep same min height as card */
     gap: 4px;
 }
 
 /* responsive tweak */
 @media (max-width: 640px) {
-    .option-card > .option-content {
+    .option-card>.option-content {
         margin-left: 56px;
+    }
+}
+
+/* When options are text-only, show a 2x2 grid for up to 4 items */
+.options-display.text-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    align-items: stretch;
+}
+
+/* Ensure option-card fills its grid cell nicely */
+.options-display.text-grid .option-card {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 92px;
+    /* slightly taller for two-line content */
+    padding: 14px 16px 14px 74px;
+    /* leave room for centered badge */
+}
+
+/* On narrow screens stack into single column */
+@media (max-width: 640px) {
+    .options-display.text-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .options-display.text-grid .option-card {
+        padding-left: 60px;
     }
 }
