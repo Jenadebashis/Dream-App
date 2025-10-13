@@ -321,22 +321,81 @@ body {
 }
 
 .option-card {
-    /* Removed white background */
-    background: rgba(0, 0, 0, 0.45);
-    color: #fff;
-    padding: 14px;
-    border-radius: 10px;
-    min-height: 80px;
-    /* prevent collapse */
+    position: relative;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    border-radius: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-    transition: transform .12s ease;
-    opacity: 0;
-    transform: translateY(12px);
-    animation: fadeUpIn 760ms cubic-bezier(.2, .9, .2, 1) both;
+    align-items: flex-start;
+    min-height: 72px;
+    /* replace plain border with a subtle gradient border */
+    border: 1px solid transparent;
+    border-image: linear-gradient(90deg, #60A5FA, #6EE7B7, #E879F9) 1;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.02);
+    transition: transform 260ms cubic-bezier(.2,.9,.2,1), box-shadow 260ms, filter 260ms;
+    animation: optionSlideUp 800ms cubic-bezier(.2,.9,.2,1) both;
     will-change: transform, opacity;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    overflow: hidden;
+}
+
+/* keep card content above decorative pseudo elements */
+.option-card > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* thin decorative color strip (top-left)
+.option-card::before{
+    content: "";
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 44px;
+    height: 5px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #60A5FA, #6EE7B7, #E879F9);
+    opacity: 0.95;
+    z-index: 1;
+    pointer-events: none;
+} */
+
+/* soft outer glow that appears on hover */
+.option-card::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 14px;
+    background: linear-gradient(90deg, rgba(96,165,250,0.10), rgba(110,231,183,0.10), rgba(232,121,249,0.10));
+    filter: blur(12px);
+    opacity: 0;
+    transition: opacity 260ms ease;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.option-card:hover::after{
+    opacity: 1;
+}
+
+/* Hover / focus - stronger lift and brighter border */
+.option-card:hover,
+.option-card:focus {
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 14px 34px rgba(0,0,0,0.5);
+    border-image: linear-gradient(90deg, #7DD3FC, #86EFAC, #F0ABFC) 1;
+}
+
+/* ensure correct/incorrect states still read well with new border */
+.option-card.correct {
+    border-image: linear-gradient(90deg, rgba(41,181,115,0.9), rgba(96,165,250,0.12)) 1;
+}
+
+.option-card.incorrect {
+    border-image: linear-gradient(90deg, rgba(229,83,83,0.95), rgba(232,121,249,0.06)) 1;
 }
 
 /* Question text: slower, smoother entrance */
