@@ -118,7 +118,7 @@ export default function QuizPlayer({
         setShowContent(true);
         setTransitioning(false);
         contentTimeoutRef.current = null;
-      }, 2500);
+      }, 4500);
     };
 
     // fade out quickly, then swap src
@@ -256,7 +256,7 @@ export default function QuizPlayer({
                       : ''
                   }`}
                   onClick={() => onSelect(i + 1)}
-                  style={{ animationDelay: `${i * 140}ms` }}
+                  style={{ animationDelay: `${i * 450}ms` }} // increased stagger for slower feel
                 >
                   <span className="option-number">Option {i + 1}</span>
                   {opt.text && <div className="option-text">{opt.text}</div>}
