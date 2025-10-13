@@ -14,6 +14,13 @@ const setupSection = document.getElementById('setupSection');
 const quizSection = document.getElementById('quizSection');
 const answerFormatRadios = document.querySelectorAll('input[name="answerFormat"]');
 
+const questionBackgrounds = [
+    'background1.mp4',
+    'background2.mp4',
+    'background3.mp4',
+    'background4.mp4'
+];
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
@@ -276,9 +283,30 @@ async function startRecording() {
     }
 }
 
+function setBackgroundForQuestion(index) {
+    const video = document.getElementById('backgroundVideo');
+    if (!video) return;
+    const source = video.querySelector('source');
+    if (!source) return;
+
+    const bg = questionBackgrounds[index % questionBackgrounds.length];
+    // If already set to this background, do nothing
+    if (source.getAttribute('data-current') === bg) return;
+
+    source.setAttribute('src', bg);
+    source.setAttribute('data-current', bg);
+    // reload the video element so the new source is used
+    video.load();
+    // try to play (catch promise rejection for autoplay policy)
+    video.play().catch(() => {});
+}
+
 function displayQuestion() {
     const questionTextElem = document.getElementById('displayQuestionText');
     questionTextElem.textContent = quizData.questions[currentQuestionIndex].questionText;
+
+    // ensure background corresponds to current question
+    setBackgroundForQuestion(currentQuestionIndex);
 }
 
 function displayOptions() {
@@ -421,6 +449,7 @@ function nextQuestion() {
     currentQuestionIndex++;
 
     if (currentQuestionIndex < quizData.questions.length) {
+        setBackgroundForQuestion(currentQuestionIndex);
         // Next question
         selectedAnswer = null;
         displayQuestion();
