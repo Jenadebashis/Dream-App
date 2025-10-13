@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Quiz Creator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Background Video -->
+    <video id="backgroundVideo" autoplay loop muted playsinline>
+        <source src="background.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div class="container">
+        <!-- Quiz Setup Form -->
+        <div id="setupSection" class="setup-section">
+            <h1>🎯 Animated Quiz Creator</h1>
+            <p class="subtitle">Create engaging quiz questions with animated reveals!</p>
+            
+            <form id="quizForm">
+                <div class="form-group">
+                    <label for="questionText">Question:</label>
+                    <textarea id="questionText" rows="3" placeholder="Enter your question here..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Answer Format:</label>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="answerFormat" value="text" checked>
+                            <span>Text Only</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="answerFormat" value="image">
+                            <span>Image Only</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="answerFormat" value="both">
+                            <span>Text & Image</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Options (4 options):</label>
+                    <div class="options-container">
+                        <div class="option-input">
+                            <input type="text" id="option1" placeholder="Option 1">
+                            <input type="file" id="optionImage1" accept="image/*" class="option-image-input">
+                        </div>
+                        <div class="option-input">
+                            <input type="text" id="option2" placeholder="Option 2">
+                            <input type="file" id="optionImage2" accept="image/*" class="option-image-input">
+                        </div>
+                        <div class="option-input">
+                            <input type="text" id="option3" placeholder="Option 3">
+                            <input type="file" id="optionImage3" accept="image/*" class="option-image-input">
+                        </div>
+                        <div class="option-input">
+                            <input type="text" id="option4" placeholder="Option 4">
+                            <input type="file" id="optionImage4" accept="image/*" class="option-image-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="correctAnswer">Correct Answer (1-4):</label>
+                    <select id="correctAnswer" required>
+                        <option value="1">Option 1</option>
+                        <option value="2">Option 2</option>
+                        <option value="3">Option 3</option>
+                        <option value="4">Option 4</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="answerExplanation">Answer Explanation (optional):</label>
+                    <textarea id="answerExplanation" rows="2" placeholder="Explain why this is the correct answer..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary">Start Quiz & Record 🎥</button>
+            </form>
+        </div>
+
+        <!-- Quiz Display Section -->
+        <div id="quizSection" class="quiz-section" style="display: none;">
+            <div class="quiz-container">
+                <div id="questionDisplay" class="question-display">
+                    <h2 id="displayQuestionText"></h2>
+                </div>
+
+                <div id="optionsDisplay" class="options-display"></div>
+
+                <div id="timerSection" class="timer-section" style="display: none;">
+                    <div class="timer-bar-container">
+                        <div id="timerBar" class="timer-bar"></div>
+                    </div>
+                    <div class="timer-text">
+                        Time Remaining: <span id="timerDisplay">10</span>s
+                    </div>
+                </div>
+
+                <div id="resultSection" class="result-section" style="display: none;">
+                    <div id="resultMessage" class="result-message"></div>
+                    <div id="explanationDisplay" class="explanation-display"></div>
+                </div>
+
+                <div id="recordingStatus" class="recording-status">
+                    <span class="recording-dot"></span>
+                    Recording in progress...
+                </div>
+
+                <button id="downloadVideo" class="btn-download" style="display: none;">
+                    Download Video 📹
+                </button>
+
+                <button id="restartBtn" class="btn-secondary" style="display: none;">
+                    Create New Quiz
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
