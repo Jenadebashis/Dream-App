@@ -64,7 +64,8 @@ body {
 
 .form-group input[type="text"],
 .form-group textarea,
-.form-group select {
+.form-group select,
+.form-group input[type="file"] {
     width: 100%;
     padding: 12px;
     border: 2px solid #555;
@@ -139,18 +140,32 @@ body {
 
 .options-container {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 10px;
+    margin-bottom: 10px;
 }
 
+/* Each option becomes a column that can sit next to others on wide screens */
 .option-input {
     display: flex;
     gap: 10px;
     align-items: center;
+    flex: 1 1 calc(25% - 10px); /* four across */
+    min-width: 0; /* allow children to shrink below their content width */
 }
 
+/* Make the inner inputs flex so they fill available space reliably */
+.option-input input[type="text"],
+.option-input input[type="file"] {
+    flex: 1 1 100%;
+    min-width: 0; /* critical to prevent overflowing in flex items */
+    width: auto;   /* remove fixed 100% which can break flex behavior */
+}
+
+/* ensure file input control itself can shrink/grow */
 .option-image-input {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .image-preview {
@@ -158,9 +173,18 @@ body {
 }
 
 .image-preview img {
-    max-width: 100px;
-    max-height: 100px;
+    max-width: 140px;
+    max-height: 140px;
     border-radius: 5px;
+}
+
+/* slightly taller option images */
+.option-card img {
+    max-width: 100%;
+    max-height: 260px; /* increased from 200px */
+    object-fit: cover;
+    border-radius: 10px;
+    margin-top: 10px;
 }
 
 /* Added Questions */
@@ -224,7 +248,7 @@ body {
 
 .quiz-section.centered {
     margin: 50px auto;
-    max-width: 800px;
+    max-width: 1800px;
 }
 
 .quiz-container {
@@ -309,7 +333,7 @@ body {
 
 .option-card img {
     max-width: 100%;
-    max-height: 200px;
+    max-height: 260px; /* increased from 200px */
     object-fit: cover;
     border-radius: 10px;
     margin-top: 10px;
@@ -474,5 +498,15 @@ body {
 
     .option-card {
         padding: 15px;
+    }
+
+    /* stack option inputs on small screens */
+    .options-container {
+        flex-direction: column;
+    }
+
+    .option-input {
+        flex: 1 1 100%;
+        min-width: 0;
     }
 }
