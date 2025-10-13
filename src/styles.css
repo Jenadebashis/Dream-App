@@ -982,3 +982,18 @@ body {
     /* ensure the card's transform origin and compositing are GPU friendly */
     will-change: transform;
 }
+
+/* add to your global CSS */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* hides horizontal scrollbar */
+    box-sizing: border-box;
+}
+
+/* make media responsive so it won't overflow */
+img, video, iframe {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
