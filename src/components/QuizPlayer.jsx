@@ -109,7 +109,7 @@ export default function QuizPlayer({
     const fadeDuration = 360;
     const onCanPlay = () => {
       video.removeEventListener('canplay', onCanPlay);
-      video.play().catch(() => {});
+      video.play().catch(() => { });
       video.style.opacity = '1';
 
       // wait 2.5s (2500ms) AFTER video is ready before showing question/options and starting timer
@@ -246,21 +246,24 @@ export default function QuizPlayer({
               {options.map((opt, i) => (
                 <div
                   key={`${q.id ?? index}-${i}`}
-                  className={`option-card ${
-                    selected !== null
+                  className={`option-card ${selected !== null
                       ? (i + 1) === (q.correctAnswer ?? 1)
                         ? 'correct'
                         : (i + 1) === selected
-                        ? 'incorrect'
-                        : ''
+                          ? 'incorrect'
+                          : ''
                       : ''
-                  }`}
+                    }`}
                   onClick={() => onSelect(i + 1)}
-                  style={{ animationDelay: `${i * 450}ms` }} // increased stagger for slower feel
+                  style={{ animationDelay: `${i * 260}ms` }} // increased stagger for slower feel
                 >
-                  <span className="option-number">Option {i + 1}</span>
-                  {opt.text && <div className="option-text">{opt.text}</div>}
-                  {opt.image && <img src={opt.image} alt={`opt-${i}`} />}
+                  <div className="option-badge">{String.fromCharCode(65 + i)}</div>
+                  <div className="option-content">
+                    {opt.text && <div className="option-text">{opt.text}</div>}
+                    {opt.image && <img src={opt.image} alt={`opt-${i}`} />}
+                    {/* optional subtext (uncomment/use if you have metadata) */}
+                    {/* opt.sub && <div className="option-subtext">{opt.sub}</div> */}
+                  </div>
                 </div>
               ))}
             </div>
