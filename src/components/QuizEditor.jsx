@@ -14,6 +14,7 @@ export default function QuizEditor({ quiz, addQuestion }) {
   const [format, setFormat] = useState('text');
   const [options, setOptions] = useState(Array.from({length:4}, ()=>({id: Math.random().toString(36).substr(2, 9), text:'',image:null})));
   const [multipleImages, setMultipleImages] = useState([]);
+  const [correctAnswer, setCorrectAnswer] = useState(1); // 1-based index for correct option
 
   const updateOption = (idx, patch) => {
     setOptions(o => o.map((it,i)=> i===idx ? {...it,...patch} : it));
@@ -32,7 +33,7 @@ export default function QuizEditor({ quiz, addQuestion }) {
       questionText, 
       answerFormat: format, 
       options: [], 
-      correctAnswer: 1, 
+      correctAnswer: Number(correctAnswer) || 1, // ensure numeric 1-based index
       explanation: '' 
     };
 
@@ -97,6 +98,20 @@ export default function QuizEditor({ quiz, addQuestion }) {
           ))}
         </div>
       )}
+
+      {/* Correct answer selector (keeps editor HTML explicit) */}
+      <div className="form-group">
+        <label htmlFor="correctAnswer">Correct answer</label>
+        <select
+          id="correctAnswer"
+          value={correctAnswer}
+          onChange={(e) => setCorrectAnswer(Number(e.target.value))}
+        >
+          {options.map((opt, i) => (
+            <option key={opt.id || i} value={i + 1}>{`Option ${i + 1}`}</option>
+          ))}
+        </select>
+      </div>
 
       <div style={{marginTop:12}}>
         <button type="button" className="btn-primary" onClick={handleAdd}>Add to Quiz</button>
