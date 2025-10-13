@@ -8,7 +8,8 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     /* Removed gradient background */
     min-height: 100vh;
-    color: white; /* Changed to white for contrast over video */
+    color: white;
+    /* Changed to white for contrast over video */
 }
 
 /* Background Video */
@@ -30,11 +31,14 @@ body {
 
 /* Setup Section */
 .setup-section {
-    background: rgba(0, 0, 0, 0.7); /* Semi-transparent dark overlay */
+    background: rgba(0, 0, 0, 0.7);
+    /* Semi-transparent dark overlay */
     border-radius: 15px;
     padding: 30px;
-    width: 90%; /* Covers most horizontal space */
-    max-width: none; /* Removed max-width to allow full expansion */
+    width: 90%;
+    /* Covers most horizontal space */
+    max-width: none;
+    /* Removed max-width to allow full expansion */
     margin: 50px auto;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
@@ -110,7 +114,7 @@ body {
     cursor: pointer;
 }
 
-.radio-label input[type="radio"]:checked + span {
+.radio-label input[type="radio"]:checked+span {
     color: #667eea;
     font-weight: 600;
 }
@@ -150,16 +154,20 @@ body {
     display: flex;
     gap: 10px;
     align-items: center;
-    flex: 1 1 calc(25% - 10px); /* four across */
-    min-width: 0; /* allow children to shrink below their content width */
+    flex: 1 1 calc(25% - 10px);
+    /* four across */
+    min-width: 0;
+    /* allow children to shrink below their content width */
 }
 
 /* Make the inner inputs flex so they fill available space reliably */
 .option-input input[type="text"],
 .option-input input[type="file"] {
     flex: 1 1 100%;
-    min-width: 0; /* critical to prevent overflowing in flex items */
-    width: auto;   /* remove fixed 100% which can break flex behavior */
+    min-width: 0;
+    /* critical to prevent overflowing in flex items */
+    width: auto;
+    /* remove fixed 100% which can break flex behavior */
 }
 
 /* ensure file input control itself can shrink/grow */
@@ -181,7 +189,8 @@ body {
 /* slightly taller option images */
 .option-card img {
     max-width: 100%;
-    max-height: 260px; /* increased from 200px */
+    max-height: 260px;
+    /* increased from 200px */
     object-fit: cover;
     border-radius: 10px;
     margin-top: 10px;
@@ -237,11 +246,14 @@ body {
 
 /* Quiz Section */
 .quiz-section {
-    background: rgba(0, 0, 0, 0.7); /* Semi-transparent overlay */
+    background: rgba(0, 0, 0, 0.7);
+    /* Semi-transparent overlay */
     border-radius: 15px;
     padding: 30px;
-    width: 90%; /* Covers most horizontal space */
-    max-width: none; /* Removed max-width to allow full expansion */
+    width: 90%;
+    /* Covers most horizontal space */
+    max-width: none;
+    /* Removed max-width to allow full expansion */
     margin: 50px auto;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
@@ -290,26 +302,40 @@ body {
     width: 100%;
     max-width: 1100px;
     margin: 12px 0 20px;
-    z-index: 11; /* above background */
+    z-index: 11;
+    /* above background */
 }
 
 .option-card {
     /* Removed white background */
-    background: rgba(0,0,0,0.45);
+    background: rgba(0, 0, 0, 0.45);
     color: #fff;
     padding: 14px;
     border-radius: 10px;
-    min-height: 80px;        /* prevent collapse */
+    min-height: 80px;
+    /* prevent collapse */
     display: flex;
     flex-direction: column;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
     transition: transform .12s ease;
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeUpIn 760ms cubic-bezier(.2, .9, .2, 1) both;
+    will-change: transform, opacity;
 }
 
 /* make option content readable */
-.option-number { font-weight: 600; margin-bottom: 6px; color: #f1f1f1; }
-.option-text  { color: #fff; line-height: 1.2; }
+.option-number {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #f1f1f1;
+}
+
+.option-text {
+    color: #fff;
+    line-height: 1.2;
+}
 
 /* ensure images inside options size nicely
 .option-card img {
@@ -325,31 +351,20 @@ body {
     transform: translateY(0);
 }
 
-.option-card:hover {
-    border-color: #667eea;
-    background: rgba(255, 255, 255, 0.2);
-}
+/* Removed duplicate .option-card:hover block */
 
 .option-card.selected {
     border-color: #667eea;
     background: rgba(102, 126, 234, 0.3);
 }
 
-.option-card.correct {
-    border-color: #4CAF50;
-    background: rgba(76, 175, 80, 0.3);
-}
-
-.option-card.incorrect {
-    border-color: #f44336;
-    background: rgba(244, 67, 54, 0.3);
-}
+/* Removed duplicate .option-card.correct and .option-card.incorrect */
 
 /* .btn-primary {
     position: relative;
     z-index: 12;
     width: auto;                /* allow it to be centered, not full width */
-    /* max-width: 420px;
+/* max-width: 420px;
     padding: 12px 28px;
     margin-top: 16px;
     align-self: center; */
@@ -472,33 +487,117 @@ body {
 
 /* Animations */
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes slideDown {
-    from { transform: translateY(-20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 @keyframes optionSlideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 @keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0;
+    }
+}
+
+/* slower, more noticeable animations */
+@keyframes fadeUpIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.996);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* question text animation: slower */
+.question-text-animated {
+    animation: fadeUpIn 900ms cubic-bezier(.2, .9, .2, 1) both;
+}
+
+/* option cards animate in with a slower fade+slide, stagger via inline style animationDelay */
+/* Removed duplicate .option-card block, merged above */
+
+/* increase stagger in JS (i * 140ms) — combined effect is a slower, visible cascade */
+
+/* keep hover subtle */
+.option-card:hover {
+    transform: translateY(-4px) scale(1.005);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+/* when selected or revealed, add stronger feedback */
+.option-card.correct {
+    border: 2px solid rgba(72, 187, 120, 0.9);
+    background: linear-gradient(180deg, rgba(72, 187, 120, 0.12), rgba(72, 187, 120, 0.06));
+}
+
+.option-card.incorrect {
+    border: 2px solid rgba(236, 72, 94, 0.9);
+    background: linear-gradient(180deg, rgba(236, 72, 94, 0.06), rgba(236, 72, 94, 0.02));
+}
+
+/* ensure timeline and controls remain visible */
+.quiz-container,
+.quiz-section,
+.options-display {
+    transition: opacity 220ms ease, transform 220ms ease;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
+
     .setup-section,
     .quiz-section {
         margin: 20px;
@@ -532,6 +631,13 @@ body {
     .options-display {
         grid-template-columns: 1fr;
     }
-    .option-card { min-height: 72px; }
-    .btn-primary { width: 100%; max-width: none; }
+
+    .option-card {
+        min-height: 72px;
+    }
+
+    .btn-primary {
+        width: 100%;
+        max-width: none;
+    }
 }
