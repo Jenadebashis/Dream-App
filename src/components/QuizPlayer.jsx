@@ -18,6 +18,9 @@ export default function QuizPlayer({
     );
   }
 
+  // change this to adjust per-question duration
+  const QUESTION_DURATION = 10;
+
   const [running, setRunning] = useState(false);
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -63,7 +66,7 @@ export default function QuizPlayer({
     }
 
     // start/reset timer for current question
-    setTimeLeft(10);
+    setTimeLeft(QUESTION_DURATION);
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -236,6 +239,10 @@ export default function QuizPlayer({
   console.log('current question', index, q);
   console.log('options length', options.length, options);
 
+  // compute progress percent and color class for the bar
+  const progressPercent = Math.max(0, Math.min(100, Math.round((timeLeft / QUESTION_DURATION) * 100)));
+  const timerColorClass = progressPercent > 60 ? 'timer-green' : progressPercent > 30 ? 'timer-yellow' : 'timer-red';
+
   return (
     <section className="quiz-section">
       <div className={`quiz-container ${transitioning ? 'transitioning' : ''}`} style={{ position: 'relative', zIndex: 10 }}>
@@ -282,6 +289,9 @@ export default function QuizPlayer({
         )}
 
         <div id="timerSection" className="timer-section" style={{ display: (running && showContent) ? 'block' : 'none' }}>
+          <div className="timer-bar" aria-hidden="true">
+            <div className={`timer-fill ${timerColorClass}`} style={{ width: `${progressPercent}%` }} />
+          </div>
           <div className="timer-text">Time left: {timeLeft}</div>
         </div>
 
