@@ -80,8 +80,17 @@
                     <textarea id="answerExplanation" rows="2" placeholder="Explain why this is the correct answer..."></textarea>
                 </div>
 
-                <button type="submit" class="btn-primary">Start Quiz & Record 🎥</button>
+                <button type="button" id="addQuestionBtn" class="btn-primary">Add to Quiz</button>
             </form>
+
+            <div id="addedQuestions" class="added-questions" style="display: none;">
+                <h3>Added Questions:</h3>
+                <ul id="questionsList"></ul>
+            </div>
+
+            <button type="button" id="startQuizBtn" class="btn-primary" style="display: none;">
+                Start Quiz & Record 🎥
+            </button>
         </div>
 
         <!-- Quiz Display Section -->
@@ -109,7 +118,6 @@
 
                 <div id="recordingStatus" class="recording-status">
                     <span class="recording-dot"></span>
-                    Recording in progress...
                 </div>
 
                 <button id="downloadVideo" class="btn-download" style="display: none;">

@@ -149,6 +149,32 @@ body {
     border-radius: 5px;
 }
 
+/* Added Questions */
+.added-questions {
+    margin-top: 20px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+.added-questions h3 {
+    color: white;
+    margin-bottom: 10px;
+}
+
+.added-questions ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.added-questions li {
+    background: rgba(255, 255, 255, 0.2);
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 5px;
+    color: white;
+}
+
 .btn-primary {
     width: 100%;
     padding: 15px;

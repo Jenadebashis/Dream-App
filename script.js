@@ -1,10 +1,12 @@
 // Global variables
 let mediaRecorder;
 let recordedChunks = [];
-let quizData = {};
+let quizData = { questions: [] };
 let timerInterval;
 let timeRemaining = 10;
 let stream;
+let currentQuestionIndex = 0;
+let selectedAnswer = null;
 
 // DOM Elements
 const quizForm = document.getElementById('quizForm');
@@ -23,8 +25,11 @@ function setupEventListeners() {
         radio.addEventListener('change', handleAnswerFormatChange);
     });
 
-    // Form submission
-    quizForm.addEventListener('submit', handleFormSubmit);
+    // Add question button
+    document.getElementById('addQuestionBtn').addEventListener('click', handleAddQuestion);
+
+    // Start quiz button
+    document.getElementById('startQuizBtn').addEventListener('click', startQuiz);
 
     // Restart button
     document.getElementById('restartBtn').addEventListener('click', restartQuiz);
@@ -65,9 +70,7 @@ function handleAnswerFormatChange(e) {
     }
 }
 
-async function handleFormSubmit(e) {
-    e.preventDefault();
-
+async function handleAddQuestion() {
     const format = document.querySelector('input[name="answerFormat"]:checked').value;
 
     // Validate based on format
@@ -89,13 +92,18 @@ async function handleFormSubmit(e) {
         }
     }
 
+    if (!document.getElementById('questionText').value.trim()) {
+        isValid = false;
+        errorMessages.push('Question text is required.');
+    }
+
     if (!isValid) {
         alert('Please fill in all required fields:\n' + errorMessages.join('\n'));
         return;
     }
 
     // Collect form data
-    quizData = {
+    const question = {
         questionText: document.getElementById('questionText').value,
         answerFormat: format,
         options: [],
@@ -113,14 +121,28 @@ async function handleFormSubmit(e) {
             imageData = await fileToDataURL(imageFile);
         }
 
-        quizData.options.push({
+        question.options.push({
             text: text,
             image: imageData
         });
     }
 
-    // Start the quiz
-    startQuiz();
+    // Add to quiz
+    quizData.questions.push(question);
+
+    // Display in list
+    const li = document.createElement('li');
+    li.textContent = question.questionText;
+    document.getElementById('questionsList').appendChild(li);
+
+    // Show added questions
+    document.getElementById('addedQuestions').style.display = 'block';
+
+    // Clear form
+    quizForm.reset();
+
+    // Show start quiz button
+    document.getElementById('startQuizBtn').style.display = 'block';
 }
 
 function fileToDataURL(file) {
@@ -139,6 +161,10 @@ async function startQuiz() {
 
     // Start recording
     await startRecording();
+
+    // Start with first question
+    currentQuestionIndex = 0;
+    selectedAnswer = null;
 
     // Display question
     displayQuestion();
@@ -201,31 +227,36 @@ async function startRecording() {
 
 function displayQuestion() {
     const questionTextElem = document.getElementById('displayQuestionText');
-    questionTextElem.textContent = quizData.questionText;
+    questionTextElem.textContent = quizData.questions[currentQuestionIndex].questionText;
 }
 
 function displayOptions() {
     const optionsDisplay = document.getElementById('optionsDisplay');
     optionsDisplay.innerHTML = '';
 
-    quizData.options.forEach((option, index) => {
+    const currentQuestion = quizData.questions[currentQuestionIndex];
+
+    currentQuestion.options.forEach((option, index) => {
         const optionCard = document.createElement('div');
         optionCard.className = 'option-card';
         optionCard.dataset.optionNumber = index + 1;
+
+        // Add click listener
+        optionCard.addEventListener('click', () => selectOption(index + 1));
 
         const optionNumber = document.createElement('span');
         optionNumber.className = 'option-number';
         optionNumber.textContent = `Option ${index + 1}`;
         optionCard.appendChild(optionNumber);
 
-        if ((quizData.answerFormat === 'text' || quizData.answerFormat === 'both') && option.text) {
+        if ((currentQuestion.answerFormat === 'text' || currentQuestion.answerFormat === 'both') && option.text) {
             const optionText = document.createElement('div');
             optionText.className = 'option-text';
             optionText.textContent = option.text;
             optionCard.appendChild(optionText);
         }
 
-        if ((quizData.answerFormat === 'image' || quizData.answerFormat === 'both') && option.image) {
+        if ((currentQuestion.answerFormat === 'image' || currentQuestion.answerFormat === 'both') && option.image) {
             const img = document.createElement('img');
             img.src = option.image;
             optionCard.appendChild(img);
@@ -238,6 +269,12 @@ function displayOptions() {
             optionCard.classList.add('animate');
         }, index * 400);
     });
+}
+
+function selectOption(optionNum) {
+    selectedAnswer = optionNum;
+    clearInterval(timerInterval);
+    showResult();
 }
 
 function startTimer() {
@@ -283,31 +320,67 @@ function showResult() {
 
     resultSection.style.display = 'block';
 
-    // Highlight correct option
+    const currentQuestion = quizData.questions[currentQuestionIndex];
+    const correctAnswer = currentQuestion.correctAnswer;
+
+    // Highlight correct and selected options
     const optionCards = document.querySelectorAll('.option-card');
     optionCards.forEach((card, index) => {
         const optionNum = index + 1;
-        if (optionNum === quizData.correctAnswer) {
+        if (optionNum === correctAnswer) {
             card.classList.add('correct');
+        }
+        if (selectedAnswer && optionNum === selectedAnswer) {
+            card.classList.add(selectedAnswer === correctAnswer ? 'correct' : 'incorrect');
         }
     });
 
     // Display result message
-    resultMessage.className = 'result-message correct';
-    resultMessage.innerHTML = `✅ The correct answer is Option ${quizData.correctAnswer}`;
+    if (selectedAnswer === correctAnswer) {
+        resultMessage.className = 'result-message correct';
+        resultMessage.innerHTML = `✅ Correct! You selected Option ${selectedAnswer}`;
+    } else {
+        resultMessage.className = 'result-message incorrect';
+        resultMessage.innerHTML = `❌ Incorrect. You selected Option ${selectedAnswer}, but the correct answer is Option ${correctAnswer}`;
+    }
 
     // Display explanation
-    if (quizData.explanation) {
-        explanationDisplay.innerHTML = `<strong>Explanation:</strong><br>${quizData.explanation}`;
+    if (currentQuestion.explanation) {
+        explanationDisplay.innerHTML = `<strong>Explanation:</strong><br>${currentQuestion.explanation}`;
     } else {
         explanationDisplay.style.display = 'none';
     }
 
-    // Stop recording after a delay to show result
+    // Proceed to next question or end
     setTimeout(() => {
+        nextQuestion();
+    }, 3000);
+}
+
+function nextQuestion() {
+    // Hide result
+    document.getElementById('resultSection').style.display = 'none';
+
+    // Reset options display
+    document.getElementById('optionsDisplay').innerHTML = '';
+
+    currentQuestionIndex++;
+
+    if (currentQuestionIndex < quizData.questions.length) {
+        // Next question
+        selectedAnswer = null;
+        displayQuestion();
+        setTimeout(() => {
+            displayOptions();
+        }, 800);
+        setTimeout(() => {
+            startTimer();
+        }, 3000);
+    } else {
+        // End quiz
         stopRecording();
         document.getElementById('restartBtn').style.display = 'block';
-    }, 3000);
+    }
 }
 
 function stopRecording() {
@@ -322,8 +395,10 @@ function restartQuiz() {
     // Reset everything
     clearInterval(timerInterval);
     recordedChunks = [];
-    quizData = {};
+    quizData = { questions: [] };
     timeRemaining = 10;
+    currentQuestionIndex = 0;
+    selectedAnswer = null;
 
     // Reset form
     quizForm.reset();
@@ -338,4 +413,9 @@ function restartQuiz() {
     document.getElementById('downloadVideo').style.display = 'none';
     document.getElementById('restartBtn').style.display = 'none';
     document.getElementById('recordingStatus').style.display = 'flex';
+
+    // Hide added questions and start button
+    document.getElementById('addedQuestions').style.display = 'none';
+    document.getElementById('questionsList').innerHTML = '';
+    document.getElementById('startQuizBtn').style.display = 'none';
 }
