@@ -193,9 +193,22 @@ function fileToDataURL(file) {
 }
 
 async function startQuiz() {
+    const quizSection = document.getElementById('quizSection');
+    const answerFormat = document.querySelector('input[name="answerFormat"]:checked').value;
+    
+    // Conditionally add the centered class if text only
+    if (answerFormat === 'text') {
+        quizSection.classList.add('centered');
+    } else {
+        quizSection.classList.remove('centered');
+    }
+    
+    // Show the quiz section and proceed with your existing logic
+    quizSection.style.display = 'block';
+
     // Hide setup, show quiz
     setupSection.style.display = 'none';
-    quizSection.style.display = 'block';
+    // quizSection.style.display = 'block';
 
     // Start recording
     await startRecording();
