@@ -9,6 +9,7 @@ export default function QuizDisplay({ quiz = { questions: [] }, questionBackgrou
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = true;
+      // use direct play and ignore rejection
       videoRef.current.play().catch(() => {});
     }
   }, []);
@@ -29,16 +30,13 @@ export default function QuizDisplay({ quiz = { questions: [] }, questionBackgrou
       <video
         id="backgroundVideo"
         ref={videoRef}
+        src={questionBackgrounds[0] || ''}
         autoPlay
         loop
         muted
         playsInline
         style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: -1 }}
-      >
-        <source src={questionBackgrounds[0]} type="video/mp4" data-current={questionBackgrounds[0]} />
-      </video>
-
-      {/* QuizPlayer will accept backgroundVideoRef prop to switch backgrounds per question */}
+      />
       <QuizPlayer
         quiz={quiz}
         questionBackgrounds={questionBackgrounds}

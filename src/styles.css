@@ -10,6 +10,7 @@ body {
     min-height: 100vh;
     color: white;
     /* Changed to white for contrast over video */
+    background: #000; /* ensure black background to avoid white flash */
 }
 
 /* Background Video */
@@ -21,6 +22,9 @@ body {
     height: 100%;
     object-fit: cover;
     z-index: -1;
+    background: #000; /* fallback while loading */
+    transition: opacity 360ms ease; /* smooth crossfade */
+    opacity: 1;
 }
 
 .container {
@@ -191,6 +195,16 @@ body {
     max-width: 100%;
     max-height: 260px;
     /* increased from 200px */
+    object-fit: cover;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+/* constrain option image heights to avoid layout shift */
+.option-card img {
+    width: 100%;
+    height: 220px;
+    /* fixed visual area */
     object-fit: cover;
     border-radius: 10px;
     margin-top: 10px;
@@ -560,39 +574,29 @@ body {
     }
 }
 
+/* smoother question/options transitions driven by .transitioning on container */
+.quiz-container .question-display,
+.quiz-container .options-display {
+    transition: opacity 340ms ease, transform 340ms ease;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* when transitioning (exit), fade/slide up the current content */
+.quiz-container.transitioning .question-display,
+.quiz-container.transitioning .options-display {
+    opacity: 0;
+    transform: translateY(-12px);
+}
+
 /* question text animation: slower */
 .question-text-animated {
     animation: fadeUpIn 900ms cubic-bezier(.2, .9, .2, 1) both;
 }
 
-/* option cards animate in with a slower fade+slide, stagger via inline style animationDelay */
-/* Removed duplicate .option-card block, merged above */
-
-/* increase stagger in JS (i * 140ms) — combined effect is a slower, visible cascade */
-
-/* keep hover subtle */
-.option-card:hover {
-    transform: translateY(-4px) scale(1.005);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-    transition: transform 220ms ease, box-shadow 220ms ease;
-}
-
-/* when selected or revealed, add stronger feedback */
-.option-card.correct {
-    border: 2px solid rgba(72, 187, 120, 0.9);
-    background: linear-gradient(180deg, rgba(72, 187, 120, 0.12), rgba(72, 187, 120, 0.06));
-}
-
-.option-card.incorrect {
-    border: 2px solid rgba(236, 72, 94, 0.9);
-    background: linear-gradient(180deg, rgba(236, 72, 94, 0.06), rgba(236, 72, 94, 0.02));
-}
-
-/* ensure timeline and controls remain visible */
-.quiz-container,
-.quiz-section,
-.options-display {
-    transition: opacity 220ms ease, transform 220ms ease;
+/* slightly shorter enter animation so combined feel is smooth */
+.question-text-animated {
+    animation-duration: 560ms;
 }
 
 /* Responsive Design */

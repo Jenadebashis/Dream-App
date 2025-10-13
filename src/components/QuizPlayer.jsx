@@ -24,6 +24,10 @@ export default function QuizPlayer({
   const [recordedUrl, setRecordedUrl] = useState(null);
   const [completed, setCompleted] = useState(false);
 
+  const [transitioning, setTransitioning] = useState(false);
+  const [showContent, setShowContent] = useState(true);
+  const contentTimeoutRef = useRef(null);
+
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
   const streamRef = useRef(null);
@@ -34,27 +38,23 @@ export default function QuizPlayer({
     if (running && quiz.questions.length > 0 && !completed) setBackgroundForQuestion(index);
   }, [index, running, quiz.questions.length, completed]);
 
-  // Ensure intervals are always cleared when quiz completes or component unmounts
+  // clear timeout on unmount / index change
   useEffect(() => {
-    if (completed) {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      setTimeLeft(0);
-    }
     return () => {
+      if (contentTimeoutRef.current) {
+        clearTimeout(contentTimeoutRef.current);
+        contentTimeoutRef.current = null;
+      }
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
     };
-  }, [completed]);
+  }, []);
 
-  // remove runTimer function — use effect to manage a single interval tied to running/index/completed
+  // start/stop single interval only when running && content visible
   useEffect(() => {
-    if (!running || completed) {
-      // ensure any existing timer is cleared when not running or when completed
+    if (!running || completed || !showContent) {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -72,12 +72,11 @@ export default function QuizPlayer({
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          // clear interval and trigger reveal for timeout
           if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
           }
-          // use setTimeout to avoid state update during render stack
+          // schedule reveal outside interval callback stack
           setTimeout(() => revealResult(null), 0);
           return 0;
         }
@@ -85,26 +84,55 @@ export default function QuizPlayer({
       });
     }, 1000);
 
-    // cleanup on unmount or when deps change
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
     };
-  }, [running, index, completed]); // rerun when starting/stopping or when moving to next question
+  }, [running, index, completed, showContent]);
 
   const setBackgroundForQuestion = (i) => {
     const video = backgroundVideoRef?.current;
-    if (!video) return;
+    if (!video || !questionBackgrounds || questionBackgrounds.length === 0) return;
     const src = questionBackgrounds[i % questionBackgrounds.length];
-    const source = video.querySelector('source');
-    if (!source) return;
-    if (source.getAttribute('data-current') === src) return;
-    source.setAttribute('src', src);
-    source.setAttribute('data-current', src);
-    video.load();
-    video.play().catch(() => {});
+    if (!src) return;
+    if (video.datasetCurrent === src) {
+      // still ensure content is shown after any existing transition state
+      return;
+    }
+
+    // start transition: hide content immediately and mark transitioning
+    setShowContent(false);
+    setTransitioning(true);
+
+    const fadeDuration = 360;
+    const onCanPlay = () => {
+      video.removeEventListener('canplay', onCanPlay);
+      video.play().catch(() => {});
+      video.style.opacity = '1';
+
+      // wait 2.5s (2500ms) AFTER video is ready before showing question/options and starting timer
+      if (contentTimeoutRef.current) clearTimeout(contentTimeoutRef.current);
+      contentTimeoutRef.current = window.setTimeout(() => {
+        setShowContent(true);
+        setTransitioning(false);
+        contentTimeoutRef.current = null;
+      }, 2500);
+    };
+
+    // fade out quickly, then swap src
+    video.style.transition = `opacity ${fadeDuration}ms ease`;
+    video.style.opacity = '0';
+
+    const doSwap = () => {
+      video.datasetCurrent = src;
+      video.src = src;
+      video.load();
+      video.addEventListener('canplay', onCanPlay);
+    };
+
+    window.setTimeout(doSwap, Math.max(40, fadeDuration - 80));
   };
 
   const fileDownload = (blobUrl) => {
@@ -136,7 +164,6 @@ export default function QuizPlayer({
   };
 
   const stopRecording = () => {
-    // stop media recorder and tracks
     try {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
@@ -146,7 +173,6 @@ export default function QuizPlayer({
         streamRef.current = null;
       }
     } finally {
-      // Always clear the timer when recording stops / quiz stops
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -160,34 +186,31 @@ export default function QuizPlayer({
       alert('Add questions first');
       return;
     }
-    if (running) return; // prevent double start
+    if (running) return;
 
-    // reset to first question before starting
     setIndex(0);
     await startRecording();
     setRunning(true);
     setCompleted(false);
     setSelected(null);
-    // no direct timer call — effect will handle it
+    // showContent will be controlled by setBackgroundForQuestion triggered by the effect
+    setShowContent(false);
   };
 
   const revealResult = (sel) => {
     setSelected(sel);
-    // clear current timer immediately so we don't get duplicate callbacks
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
 
-    // subtle pause to show selection, then either next question or finish
     setTimeout(() => {
       const nextIndex = index + 1;
       if (nextIndex < quiz.questions.length) {
         setIndex(nextIndex);
         setSelected(null);
-        // effect watching [index] will start the next timer
+        // background change -> showContent true after delay -> effect starts timer
       } else {
-        // end of quiz: stop recording, mark completed
         if (timerRef.current) {
           clearInterval(timerRef.current);
           timerRef.current = null;
@@ -196,16 +219,14 @@ export default function QuizPlayer({
         setRunning(false);
         setCompleted(true);
       }
-    }, 1200); // slightly shorter pause for snappier UX
+    }, 1200);
   };
 
   const onSelect = (n) => {
-    // prevent selecting after completion or after already selected
     if (completed || selected !== null) return;
     revealResult(n);
   };
 
-  // Safe access to current question and options
   const q = quiz.questions[index] || { id: `q-${index}`, questionText: '', options: [], correctAnswer: 1 };
   const options = Array.isArray(q.options) ? q.options : [];
 
@@ -214,9 +235,8 @@ export default function QuizPlayer({
 
   return (
     <section className="quiz-section">
-      <div className="quiz-container" style={{ position: 'relative', zIndex: 10 }}>
-        {/* Render question and options only when recording started (running) or quiz has completed */}
-        {(running || completed) ? (
+      <div className={`quiz-container ${transitioning ? 'transitioning' : ''}`} style={{ position: 'relative', zIndex: 10 }}>
+        {(running || completed) && showContent ? (
           <>
             <div className="question-display" key={`q-${index}`}>
               <h2 className="question-text-animated">{q.questionText}</h2>
@@ -236,7 +256,7 @@ export default function QuizPlayer({
                       : ''
                   }`}
                   onClick={() => onSelect(i + 1)}
-                  style={{ animationDelay: `${i * 140}ms` }} // slower stagger
+                  style={{ animationDelay: `${i * 140}ms` }}
                 >
                   <span className="option-number">Option {i + 1}</span>
                   {opt.text && <div className="option-text">{opt.text}</div>}
@@ -246,42 +266,23 @@ export default function QuizPlayer({
             </div>
           </>
         ) : (
-          // When not running and not completed, show a clean start area (no question shown)
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
-            <button className="btn-primary" onClick={startQuiz}>Start Quiz & Record 🎥</button>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', padding: '40px 0', color: '#ddd' }}>
+            {transitioning ? 'Transitioning…' : <button className="btn-primary" onClick={startQuiz}>Start Quiz & Record 🎥</button>}
           </div>
         )}
 
-        <div id="timerSection" className="timer-section" style={{ display: running ? 'block' : 'none' }}>
+        <div id="timerSection" className="timer-section" style={{ display: (running && showContent) ? 'block' : 'none' }}>
           <div className="timer-text">Time left: {timeLeft}</div>
         </div>
 
         <div style={{ marginTop: 16 }}>
-          {/* Controls when quiz is running or completed */}
-          {running ? (
-            <button
-              className="btn-secondary"
-              onClick={() => {
-                // ensure interval cleared and recording stopped
-                if (timerRef.current) {
-                  clearInterval(timerRef.current);
-                  timerRef.current = null;
-                }
-                stopRecording();
-                setRunning(false);
-                setCompleted(false);
-              }}
-            >
-              Stop
-            </button>
-          ) : completed ? (
+          {completed ? (
             <div>
               <div style={{ color: 'white', marginBottom: 8 }}>Quiz complete ✅</div>
               {recordedUrl && <button className="btn-download" onClick={() => fileDownload(recordedUrl)} style={{ marginLeft: 8 }}>Download</button>}
               <button className="btn-secondary" style={{ marginLeft: 8 }} onClick={() => { setCompleted(false); setIndex(0); setRecordedUrl(null); }}>Restart</button>
             </div>
           ) : null}
-          {running && <span style={{ marginLeft: 12, color: '#ddd' }}>Recording…</span>}
         </div>
       </div>
     </section>
