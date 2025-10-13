@@ -39,6 +39,8 @@ function handleAnswerFormatChange(e) {
     const format = e.target.value;
     const textInputs = document.querySelectorAll('.option-input input[type="text"]');
     const imageInputs = document.querySelectorAll('.option-input input[type="file"]');
+    const multipleImagesInput = document.querySelector('.multiple-images-input');
+    const optionsContainer = document.querySelector('.options-container');
 
     if (format === 'text') {
         textInputs.forEach(input => {
@@ -49,6 +51,8 @@ function handleAnswerFormatChange(e) {
             input.style.display = 'none';
             input.required = false;
         });
+        multipleImagesInput.style.display = 'none';
+        optionsContainer.style.display = 'block';
     } else if (format === 'image') {
         textInputs.forEach(input => {
             input.style.display = 'none';
@@ -58,7 +62,9 @@ function handleAnswerFormatChange(e) {
             input.style.display = 'block';
             input.required = true;
         });
-    } else { // both
+        multipleImagesInput.style.display = 'none';
+        optionsContainer.style.display = 'block';
+    } else if (format === 'both') {
         textInputs.forEach(input => {
             input.style.display = 'block';
             input.required = true;
@@ -67,6 +73,19 @@ function handleAnswerFormatChange(e) {
             input.style.display = 'block';
             input.required = true;
         });
+        multipleImagesInput.style.display = 'none';
+        optionsContainer.style.display = 'block';
+    } else if (format === 'multiple-images') {
+        textInputs.forEach(input => {
+            input.style.display = 'none';
+            input.required = false;
+        });
+        imageInputs.forEach(input => {
+            input.style.display = 'none';
+            input.required = false;
+        });
+        multipleImagesInput.style.display = 'block';
+        optionsContainer.style.display = 'none';
     }
 }
 
@@ -77,18 +96,26 @@ async function handleAddQuestion() {
     let isValid = true;
     const errorMessages = [];
 
-    for (let i = 1; i <= 4; i++) {
-        const textInput = document.getElementById(`option${i}`);
-        const imageInput = document.getElementById(`optionImage${i}`);
-
-        if ((format === 'text' || format === 'both') && !textInput.value.trim()) {
+    if (format === 'multiple-images') {
+        const multipleImages = document.getElementById('multipleImages').files;
+        if (multipleImages.length !== 4) {
             isValid = false;
-            errorMessages.push(`Option ${i} text is required.`);
+            errorMessages.push('Please select exactly 4 images.');
         }
+    } else {
+        for (let i = 1; i <= 4; i++) {
+            const textInput = document.getElementById(`option${i}`);
+            const imageInput = document.getElementById(`optionImage${i}`);
 
-        if ((format === 'image' || format === 'both') && !imageInput.files[0]) {
-            isValid = false;
-            errorMessages.push(`Option ${i} image is required.`);
+            if ((format === 'text' || format === 'both') && !textInput.value.trim()) {
+                isValid = false;
+                errorMessages.push(`Option ${i} text is required.`);
+            }
+
+            if ((format === 'image' || format === 'both') && !imageInput.files[0]) {
+                isValid = false;
+                errorMessages.push(`Option ${i} image is required.`);
+            }
         }
     }
 
@@ -112,19 +139,30 @@ async function handleAddQuestion() {
     };
 
     // Get options
-    for (let i = 1; i <= 4; i++) {
-        const text = document.getElementById(`option${i}`).value;
-        const imageFile = document.getElementById(`optionImage${i}`).files[0];
-        let imageData = null;
-        
-        if (imageFile) {
-            imageData = await fileToDataURL(imageFile);
+    if (format === 'multiple-images') {
+        const multipleImages = document.getElementById('multipleImages').files;
+        for (let i = 0; i < 4; i++) {
+            const imageData = await fileToDataURL(multipleImages[i]);
+            question.options.push({
+                text: '',
+                image: imageData
+            });
         }
+    } else {
+        for (let i = 1; i <= 4; i++) {
+            const text = document.getElementById(`option${i}`).value;
+            const imageFile = document.getElementById(`optionImage${i}`).files[0];
+            let imageData = null;
+            
+            if (imageFile) {
+                imageData = await fileToDataURL(imageFile);
+            }
 
-        question.options.push({
-            text: text,
-            image: imageData
-        });
+            question.options.push({
+                text: text,
+                image: imageData
+            });
+        }
     }
 
     // Add to quiz
@@ -256,7 +294,7 @@ function displayOptions() {
             optionCard.appendChild(optionText);
         }
 
-        if ((currentQuestion.answerFormat === 'image' || currentQuestion.answerFormat === 'both') && option.image) {
+        if ((currentQuestion.answerFormat === 'image' || currentQuestion.answerFormat === 'both' || currentQuestion.answerFormat === 'multiple-images') && option.image) {
             const img = document.createElement('img');
             img.src = option.image;
             optionCard.appendChild(img);
@@ -336,7 +374,10 @@ function showResult() {
     });
 
     // Display result message
-    if (selectedAnswer === correctAnswer) {
+    if (selectedAnswer === null) {
+        resultMessage.className = 'result-message correct';
+        resultMessage.innerHTML = `⏰ Time's up! The correct answer is Option ${correctAnswer}`;
+    } else if (selectedAnswer === correctAnswer) {
         resultMessage.className = 'result-message correct';
         resultMessage.innerHTML = `✅ Correct! You selected Option ${selectedAnswer}`;
     } else {

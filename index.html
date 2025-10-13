@@ -40,7 +40,16 @@
                             <input type="radio" name="answerFormat" value="both">
                             <span>Text & Image</span>
                         </label>
+                        <label class="radio-label">
+                            <input type="radio" name="answerFormat" value="multiple-images">
+                            <span>Multiple Images</span>
+                        </label>
                     </div>
+                </div>
+
+                <div class="multiple-images-input" style="display: none;">
+                    <label for="multipleImages">Select 4 Images (order will determine option order):</label>
+                    <input type="file" id="multipleImages" accept="image/*" multiple required>
                 </div>
 
                 <div class="form-group">
