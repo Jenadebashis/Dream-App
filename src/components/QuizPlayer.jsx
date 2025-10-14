@@ -47,7 +47,7 @@ export default function QuizPlayer({
       dingRef.current.preload = 'auto';
       // attempt to load so it's ready
       try { dingRef.current.load(); } catch (e) {}
-      dingRef.current.volume = 1.5;
+      dingRef.current.volume = 0.9;
     } catch (e) {
       dingRef.current = null;
     }
