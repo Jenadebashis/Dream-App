@@ -7,10 +7,13 @@ export default function QuizDisplay({ quiz = { questions: [] }, questionBackgrou
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = true;
-      // use direct play and ignore rejection
-      videoRef.current.play().catch(() => {});
+    const v = videoRef.current;
+    if (v) {
+      v.muted = true;
+      // only attempt to play if a valid src is present (prevents "no supported sources" error)
+      if (v.currentSrc || v.src) {
+        v.play().catch(() => {});
+      }
     }
   }, []);
 

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import bell from '../assets/ding.mp3';
 
 export default function QuizPlayer({
   quiz = { questions: [] },
@@ -37,6 +38,55 @@ export default function QuizPlayer({
   const streamRef = useRef(null);
   const timerRef = useRef(null);
   const [timeLeft, setTimeLeft] = useState(10);
+
+  // ding sound for reveal (preload)
+  const dingRef = useRef(null);
+  useEffect(() => {
+    try {
+      dingRef.current = new Audio(bell);
+      dingRef.current.preload = 'auto';
+      // attempt to load so it's ready
+      try { dingRef.current.load(); } catch (e) {}
+      dingRef.current.volume = 1.5;
+    } catch (e) {
+      dingRef.current = null;
+    }
+    return () => {
+      if (dingRef.current) {
+        try { dingRef.current.pause(); dingRef.current.src = ''; } catch (e) {}
+        dingRef.current = null;
+      }
+    };
+  }, []);
+
+  // helpers to safely play/pause media elements (guard against "no supported sources")
+  const safePlay = async (mediaEl) => {
+    const node = mediaEl?.current ?? mediaEl;
+    if (!node) return;
+    // skip if no resolved source (prevents NotSupportedError)
+    if (!node.currentSrc && !node.src) return;
+    try {
+      await node.play();
+    } catch (e) {
+      console.warn('safePlay failed:', e);
+    }
+  };
+  const safePause = (mediaEl) => {
+    const node = mediaEl?.current ?? mediaEl;
+    try { node?.pause(); } catch (e) {}
+  };
+
+  // Ensure ding plays when "revealed" message for timeout mounts (revealed && selected === null)
+  useEffect(() => {
+    if (revealed && selected === null && dingRef.current) {
+      try {
+        dingRef.current.currentTime = 0;
+        void dingRef.current.play();
+      } catch (e) {
+        // ignore; autoplay may be blocked until user interacts
+      }
+    }
+  }, [revealed, selected]);
 
   useEffect(() => {
     if (running && quiz.questions.length > 0 && !completed) setBackgroundForQuestion(index);
@@ -205,6 +255,20 @@ export default function QuizPlayer({
     // mark selection (may be null) and reveal answers
     setSelected(sel);
     setRevealed(true);
+
+    // play ding when reveal shows (wrap in try to avoid exceptions)
+    if (dingRef.current) {
+      try {
+        dingRef.current.currentTime = 0;
+        void dingRef.current.play();
+      } catch (e) {
+        // ignore (autoplay may be blocked until user interacts)
+      }
+    }
+
+    // avoid calling play() on a video element with no source — use safe helpers
+    try { safePause(backgroundVideoRef); } catch (e) {}
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
