@@ -36,6 +36,9 @@ export default function QuizPlayer({
   const mediaRecorderRef = useRef(null);
   const recordedChunksRef = useRef([]);
   const streamRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const dingSourceRef = useRef(null);
+  const micStreamRef = useRef(null);
   const timerRef = useRef(null);
   const [timeLeft, setTimeLeft] = useState(10);
 
@@ -198,9 +201,59 @@ export default function QuizPlayer({
 
   const startRecording = async () => {
     try {
-      const s = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
-      streamRef.current = s;
-      mediaRecorderRef.current = new MediaRecorder(s, { mimeType: 'video/webm;codecs=vp9' });
+      // create audio context to mix page audio (ding) and optional mic into the recording
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const audioCtx = new AudioContextClass();
+      audioCtxRef.current = audioCtx;
+
+      // destination that becomes the audio track for the recorder
+      const dest = audioCtx.createMediaStreamDestination();
+
+      // connect ding audio element into audio graph so it will be recorded
+      if (dingRef.current) {
+        try {
+          // ensure audio context resumed on user gesture (startQuiz click qualifies)
+          if (audioCtx.state === 'suspended') await audioCtx.resume();
+          // create source and connect to destination and to speakers so user still hears it
+          dingSourceRef.current = audioCtx.createMediaElementSource(dingRef.current);
+          dingSourceRef.current.connect(dest);
+          dingSourceRef.current.connect(audioCtx.destination);
+        } catch (e) {
+          console.warn('could not connect ding into audio context', e);
+        }
+      }
+
+      // try to capture microphone (optional) and add to mix
+      try {
+        const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+        micStreamRef.current = mic;
+        const micSource = audioCtx.createMediaStreamSource(mic);
+        micSource.connect(dest);
+      } catch (e) {
+        // mic not available or denied — continue without it
+        micStreamRef.current = null;
+      }
+
+      // request display media; ask for audio too — user may choose to share system/tab audio
+      let displayStream;
+      try {
+        displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      } catch (err) {
+        // fallback to video-only if user/system doesn't allow audio in getDisplayMedia
+        displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      }
+
+      // Build combined stream: video from display, audio from dest + any display audio if present
+      const combined = new MediaStream();
+      displayStream.getVideoTracks().forEach((t) => combined.addTrack(t));
+      // prefer dest audio (mixed ding + mic), but also include displayStream audio if present
+      dest.stream.getAudioTracks().forEach((t) => combined.addTrack(t));
+      displayStream.getAudioTracks().forEach((t) => combined.addTrack(t));
+
+      // keep reference to the underlying display stream so we can stop its tracks later
+      streamRef.current = { display: displayStream, combined };
+
+      mediaRecorderRef.current = new MediaRecorder(combined, { mimeType: 'video/webm;codecs=vp9' });
       recordedChunksRef.current = [];
       mediaRecorderRef.current.ondataavailable = (e) => {
         if (e.data.size) recordedChunksRef.current.push(e.data);
@@ -222,10 +275,29 @@ export default function QuizPlayer({
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
       }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((t) => t.stop());
-        streamRef.current = null;
+      // stop display stream tracks
+      const sRef = streamRef.current;
+      if (sRef?.display) {
+        sRef.display.getTracks().forEach((t) => t.stop());
       }
+      // stop any mic stream we opened
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach((t) => t.stop());
+        micStreamRef.current = null;
+      }
+      // disconnect audio graph
+      try {
+        if (dingSourceRef.current) {
+          dingSourceRef.current.disconnect();
+          dingSourceRef.current = null;
+        }
+        if (audioCtxRef.current) {
+          // close AudioContext to release resources
+          audioCtxRef.current.close().catch(() => {});
+          audioCtxRef.current = null;
+        }
+      } catch (e) { /* ignore */ }
+      streamRef.current = null;
     } finally {
       if (timerRef.current) {
         clearInterval(timerRef.current);
