@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 *.local
+# Ignore bundled/static assets used by the app (images, audio, video)
+src/assets/
+assets/
+public/assets/
 
 # Editor directories and files
 .vscode/*
