@@ -62,18 +62,7 @@ export default function QuizPlayer({
     };
   }, []);
 
-  // helpers to safely play/pause media elements (guard against "no supported sources")
-  const safePlay = async (mediaEl) => {
-    const node = mediaEl?.current ?? mediaEl;
-    if (!node) return;
-    // skip if no resolved source (prevents NotSupportedError)
-    if (!node.currentSrc && !node.src) return;
-    try {
-      await node.play();
-    } catch (e) {
-      console.warn('safePlay failed:', e);
-    }
-  };
+  // helper to safely pause media elements (guard against missing nodes)
   const safePause = (mediaEl) => {
     const node = mediaEl?.current ?? mediaEl;
     try { node?.pause(); } catch (e) {}
@@ -126,7 +115,7 @@ export default function QuizPlayer({
       timerRef.current = null;
     }
 
-    timerRef.current = window.setInterval(() => {
+  timerRef.current = globalThis.setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           if (timerRef.current) {
@@ -171,7 +160,7 @@ export default function QuizPlayer({
 
       // wait 2.5s (2500ms) AFTER video is ready before showing question/options and starting timer
       if (contentTimeoutRef.current) clearTimeout(contentTimeoutRef.current);
-      contentTimeoutRef.current = window.setTimeout(() => {
+  contentTimeoutRef.current = globalThis.setTimeout(() => {
         setShowContent(true);
         setTransitioning(false);
         contentTimeoutRef.current = null;
@@ -189,7 +178,7 @@ export default function QuizPlayer({
       video.addEventListener('canplay', onCanPlay);
     };
 
-    window.setTimeout(doSwap, Math.max(40, fadeDuration - 80));
+  globalThis.setTimeout(doSwap, Math.max(40, fadeDuration - 80));
   };
 
   const fileDownload = (blobUrl) => {
@@ -202,7 +191,7 @@ export default function QuizPlayer({
   const startRecording = async () => {
     try {
       // create audio context to mix page audio (ding) and optional mic into the recording
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  const AudioContextClass = globalThis.AudioContext || globalThis.webkitAudioContext;
       const audioCtx = new AudioContextClass();
       audioCtxRef.current = audioCtx;
 
@@ -245,10 +234,16 @@ export default function QuizPlayer({
 
       // Build combined stream: video from display, audio from dest + any display audio if present
       const combined = new MediaStream();
-      displayStream.getVideoTracks().forEach((t) => combined.addTrack(t));
+  for (const t of displayStream.getVideoTracks()) {
+    combined.addTrack(t);
+  }
       // prefer dest audio (mixed ding + mic), but also include displayStream audio if present
-      dest.stream.getAudioTracks().forEach((t) => combined.addTrack(t));
-      displayStream.getAudioTracks().forEach((t) => combined.addTrack(t));
+  for (const t of dest.stream.getAudioTracks()) {
+    combined.addTrack(t);
+  }
+  for (const t of displayStream.getAudioTracks()) {
+    combined.addTrack(t);
+  }
 
       // keep reference to the underlying display stream so we can stop its tracks later
       streamRef.current = { display: displayStream, combined };
@@ -278,11 +273,15 @@ export default function QuizPlayer({
       // stop display stream tracks
       const sRef = streamRef.current;
       if (sRef?.display) {
-        sRef.display.getTracks().forEach((t) => t.stop());
+        for (const t of sRef.display.getTracks()) {
+          t.stop();
+        }
       }
       // stop any mic stream we opened
       if (micStreamRef.current) {
-        micStreamRef.current.getTracks().forEach((t) => t.stop());
+        for (const t of micStreamRef.current.getTracks()) {
+          t.stop();
+        }
         micStreamRef.current = null;
       }
       // disconnect audio graph
@@ -374,6 +373,7 @@ export default function QuizPlayer({
   const q = quiz.questions[index] || { id: `q-${index}`, questionText: '', options: [], correctAnswer: 1 };
   const options = Array.isArray(q.options) ? q.options : [];
   const correctIndex = q.correctAnswer ?? 1;
+  const isPrediction = q.type === 'prediction';
   // true when none of the options include an image -> use 2x2 text layout
   const allTextOnly = options.length > 0 && options.every((o) => !o.image);
 
@@ -401,13 +401,15 @@ export default function QuizPlayer({
               {options.map((opt, i) => {
                 const optNum = i + 1;
                 let optClass = '';
-                // reveal logic: when revealed, always mark correct; if user selected something, mark incorrect for that selection
-                if (revealed) {
-                  if (optNum === correctIndex) optClass = 'correct shake';
-                  else if (selected !== null && optNum === selected) optClass = 'incorrect';
-                } else if (selected !== null) {
-                  if (optNum === correctIndex) optClass = 'correct';
-                  else if (optNum === selected) optClass = 'incorrect';
+                // reveal logic: for normal quizzes, show correct/incorrect. For prediction quizzes there is no correct answer.
+                if (!isPrediction) {
+                  if (revealed) {
+                    if (optNum === correctIndex) optClass = 'correct shake';
+                    else if (selected !== null && optNum === selected) optClass = 'incorrect';
+                  } else if (selected !== null) {
+                    if (optNum === correctIndex) optClass = 'correct';
+                    else if (optNum === selected) optClass = 'incorrect';
+                  }
                 }
                 return (
                   <div
@@ -416,7 +418,7 @@ export default function QuizPlayer({
                     onClick={() => onSelect(i + 1)}
                     style={{ animationDelay: `${i * 260}ms` }} // increased stagger for slower feel
                   >
-                    <div className="option-badge">{String.fromCharCode(65 + i)}</div>
+                    <div className="option-badge">{String.fromCodePoint(65 + i)}</div>
                     <div className="option-content">
                       {opt.text && <div className="option-text">{opt.text}</div>}
                       {opt.image && <img src={opt.image} alt={`opt-${i}`} />}
@@ -429,7 +431,13 @@ export default function QuizPlayer({
             </div>
             {/* reveal message when time expires with no selection */}
             {revealed && selected === null && (
-              <div className="reveal-text">Time's up ⏰🕰️⌚ — Correct: Option {String.fromCharCode(64 + correctIndex)}</div>
+              <div className="reveal-text">
+                {isPrediction ? (
+                  "Time's up ⏰ — please comment the answer you think is correct [like 1A or 2B]"
+                ) : (
+                  <>Time's up ⏰🕰️⌚ — Correct: Option {String.fromCodePoint(64 + correctIndex)}</>
+                )}
+              </div>
             )}
           </>
         ) : (

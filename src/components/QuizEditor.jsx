@@ -12,6 +12,8 @@ function fileToDataURL(file) {
 export default function QuizEditor({ quiz, addQuestion }) {
   const [questionText, setQuestionText] = useState('');
   const [format, setFormat] = useState('text');
+  const [quizType, setQuizType] = useState('normal'); // 'normal' or 'prediction'
+  const [optionCount, setOptionCount] = useState(4); // used for prediction mode (2..10)
   const [options, setOptions] = useState(Array.from({length:4}, ()=>({id: Math.random().toString(36).substr(2, 9), text:'',image:null})));
   const [multipleImages, setMultipleImages] = useState([]);
   const [correctAnswer, setCorrectAnswer] = useState(1); // 1-based index for correct option
@@ -32,27 +34,36 @@ export default function QuizEditor({ quiz, addQuestion }) {
       id: uid,                      // <- added unique id
       questionText, 
       answerFormat: format, 
+      type: quizType, // 'normal' or 'prediction'
       options: [], 
-      correctAnswer: Number(correctAnswer) || 1, // ensure numeric 1-based index
+      correctAnswer: quizType === 'normal' ? (Number(correctAnswer) || 1) : null, // null for prediction
       explanation: '' 
     };
 
+    // build options array based on selected option count (prediction) or fixed 4 for normal
+    const expectedCount = quizType === 'prediction' ? optionCount : 4;
+
     if(format === 'multiple-images') {
-      if(multipleImages.length !== 4){ alert('Select 4 images'); return; }
-      for (let i=0;i<4;i++) {
+      if(multipleImages.length !== expectedCount){ alert(`Select ${expectedCount} images`); return; }
+      for (let i=0;i<expectedCount;i++) {
         q.options.push({ text:'', image: await fileToDataURL(multipleImages[i]) });
       }
     } else {
-      for (let i=0;i<4;i++){
-        const img = options[i].image ? await fileToDataURL(options[i].image) : null;
-        q.options.push({ text: options[i].text || '', image: img });
+      // ensure options array length matches expectedCount
+      const opts = options.slice(0, expectedCount);
+      // pad if needed
+      while(opts.length < expectedCount) opts.push({ id: Math.random().toString(36).substr(2,9), text:'', image:null });
+
+      for (let i=0;i<expectedCount;i++){
+        const img = opts[i].image ? await fileToDataURL(opts[i].image) : null;
+        q.options.push({ text: opts[i].text || '', image: img });
       }
     }
 
     console.log('Adding question object:', q); // <-- add this debug log
     addQuestion(q);
     setQuestionText('');
-    setOptions(Array.from({length:4}, ()=>({id: Math.random().toString(36).substr(2, 9), text:'',image:null})));
+  setOptions(Array.from({length: quizType === 'prediction' ? optionCount : 4}, ()=>({id: Math.random().toString(36).substr(2, 9), text:'',image:null})));
     setMultipleImages([]);
     alert('Question added');
   };
@@ -83,6 +94,34 @@ export default function QuizEditor({ quiz, addQuestion }) {
         </div>
       </div>
 
+      <div className="form-group">
+        <label htmlFor="quizTypeNormal">Quiz Type</label>
+        <div className="radio-group">
+          <label className="radio-label">
+            <input id="quizTypeNormal" type="radio" name="quizType" checked={quizType==='normal'} onChange={()=>{ setQuizType('normal'); setOptionCount(4); setOptions(Array.from({length:4}, ()=>({id: Math.random().toString(36).substr(2, 9), text:'',image:null}))) }} /> <span>Normal (exactly 4 options)</span>
+          </label>
+          <label className="radio-label">
+            <input id="quizTypePrediction" type="radio" name="quizType" checked={quizType==='prediction'} onChange={()=>{ setQuizType('prediction'); setOptionCount(4); /* keep current options but allow count change */ }} /> <span>Prediction (2–10 options, no correct answer)</span>
+          </label>
+        </div>
+      </div>
+
+      {quizType === 'prediction' && (
+        <div className="form-group">
+          <label htmlFor="optionCount">Number of options</label>
+          <input id="optionCount" type="number" min={2} max={10} value={optionCount} onChange={(e)=>{
+            const v = Math.max(2, Math.min(10, Number(e.target.value) || 2));
+            setOptionCount(v);
+            // adjust options array length to match count (but don't lose existing values)
+            setOptions(prev => {
+              const next = prev.slice(0, v);
+              while(next.length < v) next.push({ id: Math.random().toString(36).substr(2,9), text:'', image:null });
+              return next;
+            });
+          }} />
+        </div>
+      )}
+
       {format === 'multiple-images' ? (
         <div className="multiple-images-input">
           <label htmlFor="multipleImagesInput">Select 4 images</label>
@@ -99,19 +138,21 @@ export default function QuizEditor({ quiz, addQuestion }) {
         </div>
       )}
 
-      {/* Correct answer selector (keeps editor HTML explicit) */}
-      <div className="form-group">
-        <label htmlFor="correctAnswer">Correct answer</label>
-        <select
-          id="correctAnswer"
-          value={correctAnswer}
-          onChange={(e) => setCorrectAnswer(Number(e.target.value))}
-        >
-          {options.map((opt, i) => (
-            <option key={opt.id || i} value={i + 1}>{`Option ${i + 1}`}</option>
-          ))}
-        </select>
-      </div>
+      {/* Correct answer selector (hidden for prediction quizzes) */}
+      {quizType === 'normal' && (
+        <div className="form-group">
+          <label htmlFor="correctAnswer">Correct answer</label>
+          <select
+            id="correctAnswer"
+            value={correctAnswer}
+            onChange={(e) => setCorrectAnswer(Number(e.target.value))}
+          >
+            {options.slice(0, 4).map((opt, i) => (
+              <option key={opt.id || i} value={i + 1}>{`Option ${i + 1}`}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div style={{marginTop:12}}>
         <button type="button" className="btn-primary" onClick={handleAdd}>Add to Quiz</button>

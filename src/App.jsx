@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import QuizEditor from './components/QuizEditor';
-import QuizPlayer from './components/QuizPlayer';
 import QuizDisplay from './pages/QuizDisplay';
 
 // Import background videos from src/assets so Vite bundles them
